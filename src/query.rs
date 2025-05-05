@@ -5,6 +5,7 @@ pub enum Query {
 }
 
 impl Query {
+    // TODO: treat `_` as ` `
     pub fn matches(&self, tags: &[String]) -> bool {
         match self {
             Query::Accept(s) => tags.contains(s),

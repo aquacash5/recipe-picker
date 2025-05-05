@@ -4,6 +4,10 @@ use clap::Parser;
 
 use crate::query::Query;
 
+// TODO: Split existing use into a sample command
+// TODO: Add a command to list tags
+// TODO: Make the input an option and read a default value from environment
+
 /// Pick recipes
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

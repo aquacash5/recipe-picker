@@ -23,6 +23,7 @@ fn main() {
         .table_by_name(&table_name)
         .expect("Cannot read Recipes table");
 
+    // TODO: Show how many recipes were filtered out.
     let recipes: Vec<Recipe> = recipes
         .data()
         .rows()
