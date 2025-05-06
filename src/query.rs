@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 #[derive(Debug, Clone)]
 pub enum Query {
     Accept(String),
@@ -5,7 +7,6 @@ pub enum Query {
 }
 
 impl Query {
-    // TODO: treat `_` as ` `
     pub fn matches(&self, tags: &[String]) -> bool {
         match self {
             Query::Accept(s) => tags.contains(s),
@@ -17,9 +18,15 @@ impl Query {
 impl From<String> for Query {
     fn from(value: String) -> Self {
         if value.starts_with("-") {
-            Query::Deny(value.strip_prefix("-").unwrap_or_default().to_string())
+            Query::Deny(
+                value
+                    .strip_prefix("-")
+                    .unwrap_or_default()
+                    .split("_")
+                    .join(" "),
+            )
         } else {
-            Query::Accept(value)
+            Query::Accept(value.split("_").join(" "))
         }
     }
 }

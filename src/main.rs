@@ -1,6 +1,7 @@
 use calamine::{Xlsx, open_workbook};
 use clap::Parser;
 use cli::Cli;
+use itertools::Itertools;
 use rand::seq::IteratorRandom;
 use recipe::Recipe;
 
@@ -10,7 +11,6 @@ mod recipe;
 
 fn main() {
     let args = Cli::parse();
-    let mut rng = rand::rng();
 
     let mut workbook: Xlsx<_> = open_workbook(&args.input).expect("Cannot open file");
     workbook.load_tables().expect("Cannot find sheet");
@@ -23,21 +23,37 @@ fn main() {
         .table_by_name(&table_name)
         .expect("Cannot read Recipes table");
 
-    // TODO: Show how many recipes were filtered out.
     let recipes: Vec<Recipe> = recipes
         .data()
         .rows()
-        .flat_map(|row| Recipe::try_from((recipes.columns(), row)))
-        .filter(|recipe| args.tag.iter().all(|q| q.matches(&recipe.tags)))
-        .choose_multiple(&mut rng, args.results);
+        .map(|row| Recipe::from((recipes.columns(), row)))
+        .collect();
 
-    let max_book_len = recipes
-        .iter()
-        .map(|r| r.book.len())
-        .max()
-        .expect("No recipes");
+    println!();
 
-    for r in recipes {
-        println!("{:width$}: {}", r.book, r.name, width = max_book_len);
+    match args.command {
+        cli::Commands::Tags => recipes
+            .iter()
+            .flat_map(|r| r.tags.iter().map(ToOwned::to_owned))
+            .sorted()
+            .unique()
+            .for_each(|tag| println!("{tag}")),
+        cli::Commands::Sample { results, tags } => {
+            let mut rng = rand::rng();
+            let mut recipes = recipes
+                .iter()
+                .filter(|recipe| tags.iter().all(|q| q.matches(&recipe.tags)))
+                .choose_multiple(&mut rng, results);
+            recipes.sort();
+            let max_book_len = recipes
+                .iter()
+                .map(|r| r.book.len())
+                .max()
+                .expect("No recipes");
+            // TODO: Show how many recipes were filtered out.
+            for r in recipes {
+                println!("{:width$}: {}", r.book, r.name, width = max_book_len);
+            }
+        }
     }
 }

@@ -7,31 +7,49 @@ pub struct Recipe {
     pub tags: Vec<String>,
 }
 
-pub enum RecipeError {
-    CannotGetValue,
-}
-
-impl TryFrom<(&[String], &[Data])> for Recipe {
-    type Error = RecipeError;
-
-    fn try_from((columns, data): (&[String], &[Data])) -> Result<Self, Self::Error> {
+impl From<(&[String], &[Data])> for Recipe {
+    fn from((columns, data): (&[String], &[Data])) -> Self {
         let mut recipe = Recipe::default();
         for (k, v) in columns.iter().zip(data) {
-            match k.as_str() {
-                "Recipe" => recipe.name = v.as_string().ok_or(RecipeError::CannotGetValue)?,
-                "Book" => recipe.book = v.as_string().ok_or(RecipeError::CannotGetValue)?,
-                "Tags" => {
-                    recipe.tags = v
-                        .as_string()
-                        .ok_or(RecipeError::CannotGetValue)?
-                        .split(",")
-                        .map(str::trim)
-                        .map(String::from)
-                        .collect()
+            if let Some(s_v) = v.as_string() {
+                match k.as_str() {
+                    "Recipe" => recipe.name = s_v,
+                    "Book" => recipe.book = s_v,
+                    "Category" => recipe.tags.push(s_v),
+                    "Type" => recipe.tags.push(s_v),
+                    "Tags" => {
+                        recipe
+                            .tags
+                            .extend(s_v.split(",").map(str::trim).map(String::from));
+                    }
+                    _ => {}
                 }
-                _ => {}
             }
         }
-        Ok(recipe)
+        recipe
+    }
+}
+
+impl PartialEq for Recipe {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other) == std::cmp::Ordering::Equal
+    }
+}
+
+impl Eq for Recipe {}
+
+impl PartialOrd for Recipe {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Recipe {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        if self.book == other.book {
+            self.name.cmp(&other.name)
+        } else {
+            self.book.cmp(&other.book)
+        }
     }
 }

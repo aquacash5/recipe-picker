@@ -1,26 +1,34 @@
 use std::path::PathBuf;
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 
 use crate::query::Query;
-
-// TODO: Split existing use into a sample command
-// TODO: Add a command to list tags
-// TODO: Make the input an option and read a default value from environment
 
 /// Pick recipes
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 pub struct Cli {
     /// File with all of the recipes
-    #[arg()]
+    #[arg(short = 'i', long = "input", env = "RECIPE_PICKER_INPUT")]
     pub input: PathBuf,
 
-    /// How many results do you want to get from the recipes
-    #[arg()]
-    pub results: usize,
+    #[command(subcommand)]
+    pub command: Commands,
+}
 
-    /// Tags to include or exclude
-    #[arg(last = true)]
-    pub tag: Vec<Query>,
+#[derive(Subcommand, Debug)]
+pub enum Commands {
+    /// Print out tags
+    Tags,
+
+    /// Get recipe samples
+    Sample {
+        /// How many results do you want to get from the recipes
+        #[arg(short = 'r', long = "results", default_value_t = 5)]
+        results: usize,
+
+        /// Tags to include or exclude
+        #[arg(last = true)]
+        tags: Vec<Query>,
+    },
 }
