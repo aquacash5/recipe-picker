@@ -38,6 +38,7 @@ fn main() {
             .sorted()
             .unique()
             .for_each(|tag| println!("{tag}")),
+        cli::Commands::Total => println!("{}", recipes.len()),
         cli::Commands::Sample { results, tags } => {
             let mut rng = rand::rng();
             let mut recipes = recipes

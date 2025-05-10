@@ -21,6 +21,9 @@ pub enum Commands {
     /// Print out tags
     Tags,
 
+    /// Print out the total number of recipes
+    Total,
+
     /// Get recipe samples
     Sample {
         /// How many results do you want to get from the recipes

@@ -1,10 +1,11 @@
 use calamine::{Data, DataType};
+use unicase::UniCase;
 
 #[derive(Debug, Clone, Default)]
 pub struct Recipe {
-    pub name: String,
-    pub book: String,
-    pub tags: Vec<String>,
+    pub name: UniCase<String>,
+    pub book: UniCase<String>,
+    pub tags: Vec<UniCase<String>>,
 }
 
 impl From<(&[String], &[Data])> for Recipe {
@@ -12,15 +13,19 @@ impl From<(&[String], &[Data])> for Recipe {
         let mut recipe = Recipe::default();
         for (k, v) in columns.iter().zip(data) {
             if let Some(s_v) = v.as_string() {
+                let s_v = UniCase::new(s_v);
                 match k.as_str() {
                     "Recipe" => recipe.name = s_v,
                     "Book" => recipe.book = s_v,
                     "Category" => recipe.tags.push(s_v),
                     "Type" => recipe.tags.push(s_v),
                     "Tags" => {
-                        recipe
-                            .tags
-                            .extend(s_v.split(",").map(str::trim).map(String::from));
+                        recipe.tags.extend(
+                            s_v.split(",")
+                                .map(str::trim)
+                                .map(String::from)
+                                .map(UniCase::new),
+                        );
                     }
                     _ => {}
                 }
