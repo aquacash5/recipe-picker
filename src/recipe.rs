@@ -10,25 +10,29 @@ pub struct Recipe {
 
 impl From<(&[String], &[Data])> for Recipe {
     fn from((columns, data): (&[String], &[Data])) -> Self {
+        assert!(columns.len() == data.len());
         let mut recipe = Recipe::default();
-        for (k, v) in columns.iter().zip(data) {
-            if let Some(s_v) = v.as_string() {
-                let s_v = UniCase::new(s_v);
-                match k.as_str() {
-                    "Recipe" => recipe.name = s_v,
-                    "Book" => recipe.book = s_v,
-                    "Category" => recipe.tags.push(s_v),
-                    "Type" => recipe.tags.push(s_v),
-                    "Tags" => {
-                        recipe.tags.extend(
-                            s_v.split(",")
-                                .map(str::trim)
-                                .map(String::from)
-                                .map(UniCase::new),
-                        );
-                    }
-                    _ => {}
+        let data = data
+            .iter()
+            .map(Data::as_string)
+            .map(|d| d.map(UniCase::new));
+        let columns = columns.iter().map(Option::Some);
+        let pairs = columns.zip(data).flat_map(|(k, v)| k.zip(v));
+        for (k, v) in pairs {
+            match k.as_str() {
+                "Recipe" => recipe.name = v,
+                "Book" => recipe.book = v,
+                "Category" => recipe.tags.push(v),
+                "Type" => recipe.tags.push(v),
+                "Tags" => {
+                    recipe.tags.extend(
+                        v.split(",")
+                            .map(str::trim)
+                            .map(String::from)
+                            .map(UniCase::new),
+                    );
                 }
+                _ => {}
             }
         }
         recipe
