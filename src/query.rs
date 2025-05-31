@@ -3,15 +3,23 @@ use unicase::UniCase;
 
 #[derive(Debug, Clone)]
 pub enum Query {
-    Accept(UniCase<String>),
-    Deny(UniCase<String>),
+    Accept(String),
+    Deny(String),
 }
 
 impl Query {
-    pub fn matches(&self, tags: &[UniCase<String>]) -> bool {
+    pub fn matches<S: AsRef<str>>(&self, tags: &[S]) -> bool {
         match self {
-            Query::Accept(s) => tags.contains(s),
-            Query::Deny(s) => !tags.contains(s),
+            Query::Accept(s) => tags
+                .iter()
+                .map(AsRef::<str>::as_ref)
+                .map(UniCase::unicode)
+                .contains(&UniCase::new(s.as_str())),
+            Query::Deny(s) => !tags
+                .iter()
+                .map(AsRef::<str>::as_ref)
+                .map(UniCase::unicode)
+                .contains(&UniCase::new(s.as_str())),
         }
     }
 }
@@ -19,15 +27,15 @@ impl Query {
 impl From<String> for Query {
     fn from(value: String) -> Self {
         if value.starts_with("-") {
-            Query::Deny(UniCase::new(
+            Query::Deny(
                 value
                     .strip_prefix("-")
                     .unwrap_or_default()
                     .split("_")
                     .join(" "),
-            ))
+            )
         } else {
-            Query::Accept(UniCase::new(value.split("_").join(" ")))
+            Query::Accept(value.split("_").join(" "))
         }
     }
 }

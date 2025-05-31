@@ -1,33 +1,31 @@
-use calamine::{Xlsx, open_workbook};
 use clap::Parser;
 use cli::Cli;
 use itertools::Itertools;
 use rand::seq::IteratorRandom;
 use recipe::Recipe;
+use std::{fs::File, iter};
+use unicase::UniCase;
 
 mod cli;
 mod query;
 mod recipe;
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
 
-    let mut workbook: Xlsx<_> = open_workbook(&args.input).expect("Cannot open file");
-    workbook.load_tables().expect("Cannot find sheet");
-    let table_name = workbook
-        .table_names_in_sheet("Recipes")
-        .first()
-        .unwrap()
-        .to_string();
-    let recipes = workbook
-        .table_by_name(&table_name)
-        .expect("Cannot read Recipes table");
+    let csv_file = File::open(&args.input)?;
+    let mut csv_reader = csv::Reader::from_reader(csv_file);
 
-    let recipes: Vec<Recipe> = recipes
-        .data()
-        .rows()
-        .map(|row| Recipe::from((recipes.columns(), row)))
-        .collect();
+    let headers = csv_reader.headers()?.clone();
+
+    let headers = iter::repeat(Some(headers));
+    let records = csv_reader.records().map(Result::ok);
+
+    let recipes = headers
+        .zip(records)
+        .flat_map(|(k, v)| k.zip(v))
+        .map(Recipe::from)
+        .collect_vec();
 
     println!();
 
@@ -45,16 +43,17 @@ fn main() {
                 .iter()
                 .filter(|recipe| tags.iter().all(|q| q.matches(&recipe.tags)))
                 .choose_multiple(&mut rng, results);
-            recipes.sort();
+            recipes.sort_by_key(|r| UniCase::unicode(format!("{} {}", r.book, r.name)));
             let max_book_len = recipes
                 .iter()
                 .map(|r| r.book.len())
                 .max()
                 .expect("No recipes");
-            // TODO: Show how many recipes were filtered out.
             for r in recipes {
                 println!("{:width$}: {}", r.book, r.name, width = max_book_len);
             }
         }
     }
+
+    Ok(())
 }
