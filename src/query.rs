@@ -8,7 +8,7 @@ pub enum Query {
 }
 
 impl Query {
-    pub fn matches<S: AsRef<str>>(&self, tags: &[S]) -> bool {
+    pub fn matches(&self, tags: &[impl AsRef<str>]) -> bool {
         match self {
             Query::Accept(s) => tags
                 .iter()
@@ -30,7 +30,7 @@ impl From<String> for Query {
             Query::Deny(
                 value
                     .strip_prefix("-")
-                    .unwrap_or_default()
+                    .unwrap_or(&value)
                     .split("_")
                     .join(" "),
             )

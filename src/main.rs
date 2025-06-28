@@ -24,23 +24,20 @@ fn main() -> anyhow::Result<()> {
     let recipes = headers
         .zip(records)
         .flat_map(|(k, v)| k.zip(v))
-        .map(Recipe::from)
-        .collect_vec();
+        .map(Recipe::from);
 
     println!();
 
     match args.command {
-        cli::Commands::Tags => recipes
-            .iter()
-            .flat_map(|r| r.tags.iter().map(ToOwned::to_owned))
+        cli::Command::Tags => recipes
+            .flat_map(|r| r.tags.into_iter())
             .sorted()
             .unique()
             .for_each(|tag| println!("{tag}")),
-        cli::Commands::Total => println!("{}", recipes.len()),
-        cli::Commands::Sample { results, tags } => {
+        cli::Command::Total => println!("{}", recipes.count()),
+        cli::Command::Sample { results, tags } => {
             let mut rng = rand::rng();
             let mut recipes = recipes
-                .iter()
                 .filter(|recipe| tags.iter().all(|q| q.matches(&recipe.tags)))
                 .choose_multiple(&mut rng, results);
             recipes.sort_by_key(|r| UniCase::unicode(format!("{} {}", r.book, r.name)));

@@ -4,20 +4,22 @@ use clap::{Parser, Subcommand};
 
 use crate::query::Query;
 
-/// Pick recipes
+/// Recipe Picker
+///
+/// Pick recipes from a CSV of recipes and tags
 #[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
+#[command(version, about, long_about)]
 pub struct Cli {
     /// File with all of the recipes
     #[arg(short = 'i', long = "input", env = "RECIPE_PICKER_INPUT")]
     pub input: PathBuf,
 
     #[command(subcommand)]
-    pub command: Commands,
+    pub command: Command,
 }
 
 #[derive(Subcommand, Debug)]
-pub enum Commands {
+pub enum Command {
     /// Print out tags
     Tags,
 
