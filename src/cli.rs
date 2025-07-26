@@ -29,7 +29,12 @@ pub enum Command {
     /// Get recipe samples
     Sample {
         /// How many results do you want to get from the recipes
-        #[arg(short = 'r', long = "results", default_value_t = 5)]
+        #[arg(
+            short = 'r',
+            long = "results",
+            env = "RECIPE_PICKER_RESULTS",
+            default_value_t = 10
+        )]
         results: usize,
 
         /// Tags to include or exclude
